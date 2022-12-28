@@ -31,12 +31,17 @@ class Codebook:
         return features
 
     @property
-    def placeholders(self):
+    def placeholders(self) -> torch.tensor:
         return self.codebook[0]
+
+    @property
+    def vsa_features(self) -> List[torch.tensor]:
+        return self.codebook[1:]
 
     def __init__(self, features: List[Feature], latent_dim: int, seed: int = 0):
         torch.manual_seed(seed)
         self.features = features
+        self.n_features = len(features)
         # Add placeholders Feature class to automatic creation later
         placeholders = Feature(name='Placeholders', n_values=len(self.features))
         self.features.insert(0, placeholders)

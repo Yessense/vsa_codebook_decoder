@@ -1,11 +1,15 @@
-from typing import Any
+from typing import Any, Optional
 
 import hydra
 import pytorch_lightning as pl
+import torch
+import wandb
 from hydra.core.config_store import ConfigStore
 from pytorch_lightning.utilities.types import STEP_OUTPUT
+import torch.nn.functional as F
 
-from vsa_codebook_decoder.dataset.paired_dsprites import Dsprites
+from vsa_codebook_decoder.utils import iou_pytorch
+from ..dataset.paired_dsprites import Dsprites
 from .binder import Binder, FourierBinder
 from .decoder import Decoder
 from ..codebook.codebook import Codebook
@@ -20,10 +24,10 @@ class VSADecoder(pl.LightningModule):
         super().__init__()
         self.cfg = cfg
 
-        if cfg.dataset.dataset_name == 'dsprites':
+        if cfg.dataset.mode == 'dsprites':
             features = Codebook.make_features_from_dataset(Dsprites)  # type: ignore
         else:
-            raise ValueError(f"Wrong dataset name {cfg.dataset.dataset_name}")
+            raise ValueError(f"Wrong dataset name {cfg.dataset.mode}")
 
         self.decoder = Decoder(image_size=cfg.model.image_size,
                                latent_dim=cfg.model.latent_dim,
@@ -38,20 +42,79 @@ class VSADecoder(pl.LightningModule):
         else:
             raise NotImplemented(f"Wrong binder type {cfg.model.binder}")
 
+    def encode(self, labels):
+        """
+        Make latent representation with vsa vectors for labels
+
+        Parameters
+        ----------
+        labels: torch.tensor
+            labels -> (batch_size, n_features)
+
+        Returns
+        -------
+        features: torch.tensor
+            features -> (batch_size, n_features, latent_dim)
+
+        """
+        # features -> (batch_size, n_features, latent_dim)
+        features = torch.zeros((self.cfg.experiment.batch_size,
+                                self.codebook.n_features,
+                                self.cfg.model.latent_dim), dtype=torch.float32)
+
+        # codebook.vsa_features -> List[n_features, torch.tensor[feature_count, latent_dim]]
+        # vsa_feature -> (feature_count, latent_dim)
+        vsa_feature: torch.tensor
+        for i, vsa_feature in enumerate(self.codebook.vsa_features):
+            # vsa_value -> (latent_dim)
+            vsa_value: torch.tensor
+            for j, vsa_value in enumerate(vsa_feature):
+                features[:, i, labels[:, i] == j] = vsa_value
+
+        features = self.binder(features)
+        z = torch.sum(features, dim=1)
+        return z
+
+    def step(self, batch, batch_idx, mode: str = 'Train') -> torch.tensor:
+        # Logging period
+        # Log Train samples once per epoch
+        # Log Validation images triple per epoch
+        if mode == 'Train':
+            log_images = lambda x: x == 0
+        elif mode == 'Validation':
+            log_images = lambda x: x % 10 == 0
+        else:
+            raise ValueError
+
+        image: torch.tensor
+        label: torch.tensor
+
+        image, labels = batch
+
+        z = self.encode(labels)
+        decoded_image = self.decoder(z)
+
+        loss = F.mse_loss(decoded_image, image)
+        iou = iou_pytorch(decoded_image, image)
+
+        self.log(f"{mode}/MSE Loss", loss)
+        self.log(f"{mode}/IOU", iou)
+
+        if log_images(batch_idx):
+            self.logger.experiment.log({
+                f"{mode}/Images": [
+                    wandb.Image(image[0], caption='Image'),
+                    wandb.Image(decoded_image[0],
+                                caption='Reconstruction'),
+                ]})
+        return loss
+
     def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
+        loss = self.step(batch, batch_idx, mode='Train')
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> Optional[STEP_OUTPUT]:
+        self.step(batch, batch_idx, mode='Validation')
+        return None
 
 
-
-
-cs = ConfigStore.instance()
-cs.store(name="config", node=VSADecoderConfig)
-
-
-@hydra.main(config_name="config")
-def main(cfg: VSADecoderConfig) -> None:
-    vsa_decoder = VSADecoder(cfg)
-    pass
-
-
-if __name__ == '__main__':
-    main()

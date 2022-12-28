@@ -1,10 +1,11 @@
 import random
 from pathlib import Path
-from typing import Tuple, List, Set
+from typing import Tuple, List, Set, Optional
 
 import torch
 import numpy as np
-from torch.utils.data import DataLoader, Dataset
+from pytorch_lightning.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
+from torch.utils.data import DataLoader, Dataset, random_split
 import pytorch_lightning as pl
 import itertools
 import operator
@@ -222,6 +223,35 @@ class PairedDspritesDataset(Dataset):
         return img, pair_img, exchange, img_label, pair_label
 
 
+class DspritesDatamodule(pl.LightningDataModule):
+    dataset: Dataset
+    image_size = (1, 64, 64)
+
+    def __init__(self, path_to_data_dir: str = '../data/',
+                 batch_size: int = 64,
+                 train_size: int = 100_000,
+                 val_size: int = 30_000):
+        super().__init__()
+        self.path_to_data_dir = Path(path_to_data_dir)
+        self.path_to_dsprites_dataset = str(self.path_to_data_dir / 'dsprites_train.npz')
+        self.batch_size = batch_size
+        self.train_size, self.val_size = train_size, val_size
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        dataset = Dsprites(self.path_to_dsprites_dataset)
+
+        last_chunk = len(dataset) - self.train_size - self.val_size
+        self.dsprites_train, self.dsprites_val, _ = random_split(self.dataset,
+                                                                 [self.train_size, self.val_size,
+                                                                  last_chunk])
+
+    def train_dataloader(self) -> TRAIN_DATALOADERS:
+        return DataLoader(self.dsprites_train, batch_size=self.batch_size, drop_last=True)
+
+    def val_dataloader(self) -> EVAL_DATALOADERS:
+        return DataLoader(self.dsprites_val, batch_size=self.batch_size, drop_last=True)
+
+
 class PairedDspritesDatamodule(pl.LightningDataModule):
     train_dataset: Dataset
     val_dataset: Dataset
@@ -231,8 +261,7 @@ class PairedDspritesDatamodule(pl.LightningDataModule):
                  batch_size: int = 64):
         super().__init__()
         self.path_to_data_dir = Path(path_to_data_dir)
-        self.path_to_dsprites_dataset = str(
-            self.path_to_data_dir / 'dsprites_train.npz')
+        self.path_to_dsprites_dataset = str(self.path_to_data_dir / 'dsprites_train.npz')
         self.batch_size = batch_size
         self.image_size = (1, 64, 64)
 
