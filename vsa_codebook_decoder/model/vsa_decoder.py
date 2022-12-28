@@ -7,6 +7,7 @@ import wandb
 from hydra.core.config_store import ConfigStore
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 import torch.nn.functional as F
+from torch.optim import lr_scheduler
 
 from vsa_codebook_decoder.utils import iou_pytorch
 from ..dataset.paired_dsprites import Dsprites
@@ -116,5 +117,16 @@ class VSADecoder(pl.LightningModule):
     def validation_step(self, batch, batch_idx) -> Optional[STEP_OUTPUT]:
         self.step(batch, batch_idx, mode='Validation')
         return None
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=self.lr,
+                                            epochs=self.cfg.experiment.max_epochs,
+                                            steps_per_epoch=self.cfg.experiment.steps_per_epoch,
+                                            pct_start=0.2)
+        return {"optimizer": optimizer,
+                "lr_scheduler": {'scheduler': scheduler,
+                                 'interval': 'step',
+                                 'frequency': 1}, }
 
 

@@ -19,7 +19,7 @@ def main(cfg: VSADecoderConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     seed_everything(cfg.experiment.seed)
 
-    if cfg.dataset.mode == 'Dsprites':
+    if cfg.dataset.mode == 'dsprites':
         datamodule = DspritesDatamodule(path_to_data_dir=cfg.dataset.path_to_dataset,
                                         batch_size=cfg.experiment.batch_size,
                                         train_size=cfg.dataset.train_size,
@@ -47,7 +47,7 @@ def main(cfg: VSADecoderConfig) -> None:
 
     wandb_logger = WandbLogger(project=cfg.dataset.mode + '_vsa',
                                name=f'{cfg.dataset.mode} -l {cfg.model.latent_dim} '
-                                    f'-s {cfg.experiment.seed} -kl {cfg.model.kld_coef} '
+                                    f'-s {cfg.experiment.seed} '
                                     f'-bs {cfg.experiment.batch_size} '
                                     f'vsa',
                                log_model=True)
