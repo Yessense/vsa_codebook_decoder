@@ -1,3 +1,6 @@
+import os
+import pathlib
+
 import hydra
 from hydra.core.config_store import ConfigStore
 from omegaconf import OmegaConf
@@ -13,14 +16,17 @@ from .config import VSADecoderConfig
 cs = ConfigStore.instance()
 cs.store(name="config", node=VSADecoderConfig)
 
+path_to_dataset=pathlib.Path().absolute()
 
-@hydra.main(config_name="config")
+
+@hydra.main(version_base=None, config_name="config")
 def main(cfg: VSADecoderConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     seed_everything(cfg.experiment.seed)
 
+
     if cfg.dataset.mode == 'dsprites':
-        datamodule = DspritesDatamodule(path_to_data_dir=cfg.dataset.path_to_dataset,
+        datamodule = DspritesDatamodule(path_to_data_dir=path_to_dataset / cfg.dataset.path_to_dataset,
                                         batch_size=cfg.experiment.batch_size,
                                         train_size=cfg.dataset.train_size,
                                         val_size=cfg.dataset.val_size)

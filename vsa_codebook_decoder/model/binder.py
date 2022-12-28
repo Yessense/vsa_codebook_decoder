@@ -15,7 +15,6 @@ class Binder(nn.Module):
 class FourierBinder(Binder):
     def __init__(self, placeholders: torch.tensor):
         super().__init__()
-
         self.hd_placeholders = nn.Parameter(data=placeholders.unsqueeze(0))
 
     def forward(self, z):

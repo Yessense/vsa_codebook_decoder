@@ -37,6 +37,8 @@ class Dsprites(Dataset):
     n_features = 5
 
     def __init__(self, path='data/paired_dsprites/dsprites_train.npz'):
+        import os
+        dir_path = os.path.dirname(os.path.realpath(__file__))
         # Load npz numpy archive
         dataset_zip = np.load(path, allow_pickle=True, encoding='latin1')
 
@@ -56,7 +58,10 @@ class Dsprites(Dataset):
         return self.size
 
     def __getitem__(self, idx):
-        return self.imgs[idx], self.labels[idx]
+
+        img = torch.from_numpy(self.imgs[idx]).unsqueeze(0).float()
+        labels = torch.from_numpy(self.labels[idx])
+        return img, labels
 
     @staticmethod
     def get_element_pos(labels: np.ndarray) -> int:
@@ -241,7 +246,7 @@ class DspritesDatamodule(pl.LightningDataModule):
         dataset = Dsprites(self.path_to_dsprites_dataset)
 
         last_chunk = len(dataset) - self.train_size - self.val_size
-        self.dsprites_train, self.dsprites_val, _ = random_split(self.dataset,
+        self.dsprites_train, self.dsprites_val, _ = random_split(dataset,
                                                                  [self.train_size, self.val_size,
                                                                   last_chunk])
 

@@ -6,7 +6,7 @@ from vsa_codebook_decoder.dataset.paired_dsprites import Dsprites
 @dataclass
 class DatasetConfig:
     mode: str = "dsprites"
-    path_to_dataset: str = "data/dsprites/dsprites_train.npz"
+    path_to_dataset: str = "./data/paired_dsprites/"
     train_size: int = 100_000
     val_size: int = 30_000
 
@@ -21,7 +21,6 @@ class DecoderConfig:
 class ModelConfig:
     decoder_config: DecoderConfig = field(default_factory=DecoderConfig)
     latent_dim: int = 1024
-    lr: float = 0.00025
     image_size: Tuple[int, int, int] = (1, 64, 64)
     binder: str = "fourier"
     monitor: str = "Validation/MSE Loss"
@@ -29,6 +28,8 @@ class ModelConfig:
 
 @dataclass
 class ExperimentConfig:
+    pct_start: float = 0.2
+    lr: float = 0.00025
     seed: int = 0
     batch_size: int = 64
     steps_per_epoch: int = 0

@@ -1,3 +1,4 @@
+import pathlib
 from typing import Any, Optional
 
 import hydra
@@ -5,11 +6,13 @@ import pytorch_lightning as pl
 import torch
 import wandb
 from hydra.core.config_store import ConfigStore
+from omegaconf import OmegaConf
+from pytorch_lightning import seed_everything
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 import torch.nn.functional as F
 from torch.optim import lr_scheduler
 
-from vsa_codebook_decoder.utils import iou_pytorch
+from ..utils import iou_pytorch
 from ..dataset.paired_dsprites import Dsprites
 from .binder import Binder, FourierBinder
 from .decoder import Decoder
@@ -59,7 +62,7 @@ class VSADecoder(pl.LightningModule):
 
         """
         # features -> (batch_size, n_features, latent_dim)
-        features = torch.zeros((self.cfg.experiment.batch_size,
+        features = torch.zeros((labels.shape[0],
                                 self.codebook.n_features,
                                 self.cfg.model.latent_dim), dtype=torch.float32)
 
@@ -70,8 +73,10 @@ class VSADecoder(pl.LightningModule):
             # vsa_value -> (latent_dim)
             vsa_value: torch.tensor
             for j, vsa_value in enumerate(vsa_feature):
-                features[:, i, labels[:, i] == j] = vsa_value
+                mask = labels[:, i] == j
+                features[mask, i] = vsa_value.unsqueeze(0)
 
+        features = features.to(self.device)
         features = self.binder(features)
         z = torch.sum(features, dim=1)
         return z
@@ -119,14 +124,38 @@ class VSADecoder(pl.LightningModule):
         return None
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
-        scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=self.lr,
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.cfg.experiment.lr)
+        scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.experiment.lr,
                                             epochs=self.cfg.experiment.max_epochs,
                                             steps_per_epoch=self.cfg.experiment.steps_per_epoch,
-                                            pct_start=0.2)
+                                            pct_start=self.cfg.experiment.pct_start)
         return {"optimizer": optimizer,
                 "lr_scheduler": {'scheduler': scheduler,
                                  'interval': 'step',
                                  'frequency': 1}, }
 
+
+
+cs = ConfigStore.instance()
+cs.store(name="config", node=VSADecoderConfig)
+
+path_to_dataset=pathlib.Path().absolute()
+
+
+@hydra.main(version_base=None, config_name="config")
+def main(cfg: VSADecoderConfig) -> None:
+    print(OmegaConf.to_yaml(cfg))
+    seed_everything(cfg.experiment.seed)
+    model = VSADecoder(cfg)
+
+    batch_size = 10
+    img = torch.randn((batch_size, 1, 64, 64))
+    labels = torch.randint(0, 3, (batch_size, 5))
+
+    model.step((img, labels), 1)
+
+    pass
+
+if __name__ == '__main__':
+    main()
 

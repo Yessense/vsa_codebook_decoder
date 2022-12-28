@@ -38,7 +38,10 @@ class Codebook:
     def vsa_features(self) -> List[torch.tensor]:
         return self.codebook[1:]
 
-    def __init__(self, features: List[Feature], latent_dim: int, seed: int = 0):
+    def __init__(self, features: List[Feature],
+                 latent_dim: int,
+                 seed: int = 0,
+                 device: torch.device = torch.device('cpu')):
         torch.manual_seed(seed)
         self.features = features
         self.n_features = len(features)
