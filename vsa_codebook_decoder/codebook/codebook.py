@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 import torch
+from torch.utils.data import Dataset
+
 from . import vsa
 
 
@@ -17,7 +19,23 @@ class Codebook:
     latent_dim: int
     codebook: List[torch.tensor]
 
-    def __init__(self, features: List[Feature], latent_dim: int):
+    @staticmethod
+    def make_features_from_dataset(dataset: Dataset) -> List[Feature]:
+        features: List[Feature] = []
+        for feature_name, n_values, contiguous in zip(dataset.feature_names,
+                                                      dataset.feature_counts,
+                                                      dataset.is_contiguous):
+            features.append(Feature(name=feature_name,
+                                    n_values=n_values,
+                                    contiguous=contiguous))
+        return features
+
+    @property
+    def placeholders(self):
+        return self.codebook[0]
+
+    def __init__(self, features: List[Feature], latent_dim: int, seed: int = 0):
+        torch.manual_seed(seed)
         self.features = features
         # Add placeholders Feature class to automatic creation later
         placeholders = Feature(name='Placeholders', n_values=len(self.features))
