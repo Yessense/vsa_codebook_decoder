@@ -1,0 +1,21 @@
+program: vsa_test.py
+method: grid
+metric:
+  goal: maximize
+  name: Accuracy
+parameters:
+  parameters.n_samples:
+    value: 10000
+  parameters.latent_dim:
+    values: [ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 ]
+  parameters.power_step:
+    values: [ 0.01, 0.05, 0.1, 0.2, 0.5, 1, 2]
+  parameters.n_con:
+    values: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+  parameters.n_values:
+    values: [ 2, 3, 5, 10, 20, 40, 70, 100 ]
+
+command:
+  - python
+  - ${program}
+  - ${args_no_hyphens}

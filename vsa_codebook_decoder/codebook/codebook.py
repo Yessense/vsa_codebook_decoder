@@ -11,7 +11,7 @@ class Feature:
     name: str
     n_values: int
     contiguous: bool = False
-    density: float = 0.
+    density: float = 1.
 
 
 class Codebook:
@@ -51,6 +51,7 @@ class Codebook:
 
         self.latent_dim = latent_dim
         self.codebook = []
+        self.features_count = []
 
         for feature in features:
             feature_vectors = torch.zeros((feature.n_values, latent_dim),
