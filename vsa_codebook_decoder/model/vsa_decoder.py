@@ -46,6 +46,8 @@ class VSADecoder(pl.LightningModule):
         else:
             raise NotImplemented(f"Wrong binder type {cfg.model.binder}")
 
+        self.save_hyperparameters()
+
     def encode(self, labels):
         """
         Make latent representation with vsa vectors for labels
