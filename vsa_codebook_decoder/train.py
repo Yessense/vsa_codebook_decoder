@@ -9,14 +9,15 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 
-from .dataset.paired_dsprites import DspritesDatamodule
+from .dataset.generalization_dsprites import GeneralizationDspritesDataModule
+from .dataset.dsprites import DspritesDatamodule
 from .model.vsa_decoder import VSADecoder
 from .config import VSADecoderConfig
 
 cs = ConfigStore.instance()
 cs.store(name="config", node=VSADecoderConfig)
 
-path_to_dataset=pathlib.Path().absolute()
+path_to_dataset = pathlib.Path().absolute()
 
 
 @hydra.main(version_base=None, config_name="config")
@@ -24,12 +25,19 @@ def main(cfg: VSADecoderConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     seed_everything(cfg.experiment.seed)
 
-
     if cfg.dataset.mode == 'dsprites':
-        datamodule = DspritesDatamodule(path_to_data_dir=path_to_dataset / cfg.dataset.path_to_dataset,
-                                        batch_size=cfg.experiment.batch_size,
-                                        train_size=cfg.dataset.train_size,
-                                        val_size=cfg.dataset.val_size)
+        datamodule = DspritesDatamodule(
+            path_to_data_dir=path_to_dataset / cfg.dataset.path_to_dataset,
+            batch_size=cfg.experiment.batch_size,
+            train_size=cfg.dataset.train_size,
+            val_size=cfg.dataset.val_size)
+    elif cfg.dataset.mode == 'generalization dsprites':
+        datamodule = GeneralizationDspritesDataModule(
+            path_to_data_dir=path_to_dataset / cfg.dataset.path_to_dataset,
+            batch_size=cfg.experiment.batch_size,
+            train_size=cfg.dataset.train_size,
+            val_size=cfg.dataset.val_size)
+
     else:
         raise NotImplemented(f"Wrong dataset mode {cfg.dataset.path_to_dataset}")
 

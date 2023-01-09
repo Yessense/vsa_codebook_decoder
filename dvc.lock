@@ -18,5 +18,5 @@ stages:
     cmd: python3 -m vsa_codebook_decoder.train
     deps:
     - path: conf/config.yaml
-      md5: e1c06d85ae7b8b032bef47e42e4c08f9
-      size: 2
+      md5: 0499c763a98d353a532dd226245e0fcf
+      size: 44
