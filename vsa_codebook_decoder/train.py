@@ -64,7 +64,7 @@ def main(cfg: VSADecoderConfig) -> None:
                                     f'-s {cfg.experiment.seed} '
                                     f'-bs {cfg.experiment.batch_size} '
                                     f'vsa',
-                               save_dir=cfg.experiment.logging_dir,
+                               dir=cfg.experiment.logging_dir,
                                log_model=True)
 
     # trainer
