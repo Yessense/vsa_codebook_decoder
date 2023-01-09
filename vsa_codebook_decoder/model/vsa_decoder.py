@@ -28,10 +28,7 @@ class VSADecoder(pl.LightningModule):
         super().__init__()
         self.cfg = cfg
 
-        if cfg.dataset.mode == 'dsprites':
-            features = Codebook.make_features_from_dataset(Dsprites)  # type: ignore
-        else:
-            raise ValueError(f"Wrong dataset name {cfg.dataset.mode}")
+        features = Codebook.make_features_from_dataset(Dsprites)  # type: ignore
 
         self.decoder = Decoder(image_size=cfg.model.image_size,
                                latent_dim=cfg.model.latent_dim,
