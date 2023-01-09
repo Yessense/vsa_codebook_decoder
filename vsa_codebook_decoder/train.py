@@ -47,10 +47,10 @@ def main(cfg: VSADecoderConfig) -> None:
     model = VSADecoder(cfg=cfg)
 
     top_metric_callback = ModelCheckpoint(monitor=cfg.model.monitor,
-
+                                          dirpath=cfg.experiment.logging_dir,
                                           save_top_k=cfg.checkpoint.save_top_k)
-    every_epoch_callback = ModelCheckpoint(
-        every_n_epochs=cfg.checkpoint.every_k_epochs)
+    every_epoch_callback = ModelCheckpoint(every_n_epochs=cfg.checkpoint.every_k_epochs,
+                                           dirpath=cfg.experiment.logging_dir)
 
     # Learning rate monitor
     lr_monitor = LearningRateMonitor(logging_interval='step')
