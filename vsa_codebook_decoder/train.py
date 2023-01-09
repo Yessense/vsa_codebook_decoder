@@ -66,8 +66,7 @@ def main(cfg: VSADecoderConfig) -> None:
              f'-s {cfg.experiment.seed} '
              f'-bs {cfg.experiment.batch_size} '
              f'vsa',
-        save_dir=cfg.experiment.logging_dir,
-        save_model=True)
+        save_dir=cfg.experiment.logging_dir)
 
     wandb_logger.watch(model)
 
