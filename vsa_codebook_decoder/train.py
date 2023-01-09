@@ -20,7 +20,7 @@ cs.store(name="config", node=VSADecoderConfig)
 path_to_dataset = pathlib.Path().absolute()
 
 
-@hydra.main(version_base=None, config_name="config")
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: VSADecoderConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     seed_everything(cfg.experiment.seed)
@@ -39,7 +39,7 @@ def main(cfg: VSADecoderConfig) -> None:
             val_size=cfg.dataset.val_size)
 
     else:
-        raise NotImplemented(f"Wrong dataset mode {cfg.dataset.path_to_dataset}")
+        raise NotImplemented(f"Wrong dataset mode {cfg.dataset.path_to_dataset!r}")
 
     cfg.experiment.steps_per_epoch = cfg.dataset.train_size // cfg.experiment.batch_size
 
