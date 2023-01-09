@@ -10,6 +10,7 @@ from ..utils import product
 
 class Decoder(nn.Module):
     def __init__(self, image_size: Tuple[int, int, int] = (1, 64, 64),
+
                  latent_dim: int = 1024,
                  hidden_channels: int = 64,
                  in_channels: int = 64):

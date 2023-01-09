@@ -2,6 +2,7 @@ import os
 import pathlib
 
 import hydra
+import wandb
 from hydra.core.config_store import ConfigStore
 from omegaconf import OmegaConf
 import pytorch_lightning as pl
@@ -59,13 +60,14 @@ def main(cfg: VSADecoderConfig) -> None:
         lr_monitor,
     ]
 
-    wandb_logger = WandbLogger(project=cfg.dataset.mode + '_vsa',
-                               name=f'{cfg.dataset.mode} -l {cfg.model.latent_dim} '
-                                    f'-s {cfg.experiment.seed} '
-                                    f'-bs {cfg.experiment.batch_size} '
-                                    f'vsa',
-                               save_dir=cfg.experiment.logging_dir,
-                               log_model=True)
+    run = wandb.init(project=cfg.dataset.mode + '_vsa',
+                     name=f'{cfg.dataset.mode} -l {cfg.model.latent_dim} '
+                          f'-s {cfg.experiment.seed} '
+                          f'-bs {cfg.experiment.batch_size} '
+                          f'vsa',
+                     dir=cfg.experiment.logging_dir)
+
+    wandb_logger = WandbLogger(experiment=run)
 
     wandb_logger.watch(model)
 
