@@ -38,6 +38,7 @@ class ExperimentConfig:
     max_epochs: int = 300
     profiler: Optional[str] = None
     gradient_clip: float = 0.0
+    logging_dir: str = "${hydra:run.dir}/"
 
 
 @dataclass
