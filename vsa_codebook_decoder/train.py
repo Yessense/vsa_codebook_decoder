@@ -67,7 +67,7 @@ def main(cfg: VSADecoderConfig) -> None:
                           f'vsa',
                      dir=cfg.experiment.logging_dir)
 
-    wandb_logger = WandbLogger(experiment=run)
+    wandb_logger = WandbLogger(experiment=run, save_model=True)
 
     wandb_logger.watch(model)
 
