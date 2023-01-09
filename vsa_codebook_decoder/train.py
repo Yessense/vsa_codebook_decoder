@@ -47,6 +47,7 @@ def main(cfg: VSADecoderConfig) -> None:
     model = VSADecoder(cfg=cfg)
 
     top_metric_callback = ModelCheckpoint(monitor=cfg.model.monitor,
+
                                           save_top_k=cfg.checkpoint.save_top_k)
     every_epoch_callback = ModelCheckpoint(
         every_n_epochs=cfg.checkpoint.every_k_epochs)
@@ -66,7 +67,8 @@ def main(cfg: VSADecoderConfig) -> None:
              f'-s {cfg.experiment.seed} '
              f'-bs {cfg.experiment.batch_size} '
              f'vsa',
-        save_dir=cfg.experiment.logging_dir)
+        save_dir=cfg.experiment.logging_dir,
+        log_model='all')
 
     wandb_logger.watch(model)
 
