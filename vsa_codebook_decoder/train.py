@@ -64,8 +64,10 @@ def main(cfg: VSADecoderConfig) -> None:
                                     f'-s {cfg.experiment.seed} '
                                     f'-bs {cfg.experiment.batch_size} '
                                     f'vsa',
-                               dir=cfg.experiment.logging_dir,
+                               save_dir=cfg.experiment.logging_dir,
                                log_model=True)
+
+    wandb_logger.watch(model)
 
     # trainer
     trainer = pl.Trainer(accelerator=cfg.experiment.accelerator,
