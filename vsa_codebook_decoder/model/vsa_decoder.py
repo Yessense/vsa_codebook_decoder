@@ -80,6 +80,11 @@ class VSADecoder(pl.LightningModule):
         z = torch.sum(features, dim=1)
         return z
 
+    def forward(self, x):
+        z = self.encode(x)
+        recons = self.decoder(z)
+        return recons
+
     def step(self, batch, batch_idx, mode: str = 'Train') -> torch.tensor:
         # Logging period
         # Log Train samples once per epoch
@@ -134,11 +139,10 @@ class VSADecoder(pl.LightningModule):
                                  'frequency': 1}, }
 
 
-
 cs = ConfigStore.instance()
 cs.store(name="config", node=VSADecoderConfig)
 
-path_to_dataset=pathlib.Path().absolute()
+path_to_dataset = pathlib.Path().absolute()
 
 
 @hydra.main(version_base=None, config_name="config")
@@ -155,6 +159,6 @@ def main(cfg: VSADecoderConfig) -> None:
 
     pass
 
+
 if __name__ == '__main__':
     main()
-

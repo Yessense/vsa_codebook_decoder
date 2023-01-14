@@ -10,6 +10,7 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 
+from .callbacks.logger import GeneralizationVisualizationCallback
 from .dataset.generalization_dsprites import GeneralizationDspritesDataModule
 from .dataset.dsprites import DspritesDatamodule
 from .model.vsa_decoder import VSADecoder
@@ -57,9 +58,12 @@ def main(cfg: VSADecoderConfig) -> None:
     # Learning rate monitor
     lr_monitor = LearningRateMonitor(logging_interval='step')
 
+    visual = GeneralizationVisualizationCallback()
+
     callbacks = [
         top_metric_callback,
         every_epoch_callback,
+        visual,
         lr_monitor,
     ]
 
